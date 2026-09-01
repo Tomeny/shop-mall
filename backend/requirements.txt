@@ -1,0 +1,10 @@
+fastapi>=0.115
+uvicorn>=0.30
+SQLAlchemy>=2.0
+PyMySQL>=1.1
+cryptography>=42.0
+bcrypt>=4.1
+PyJWT>=2.8
+pydantic>=2.7
+python-dotenv>=1.0
+python-multipart>=0.0.9
