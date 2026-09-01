@@ -2,7 +2,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { apiListProducts, apiAdminDeleteProduct } from '../api'
+import { apiListProducts, apiBuyProduct } from '../api'
 import { useUserStore } from '../stores/user'
 
 const router = useRouter()
@@ -15,7 +15,9 @@ const search = reactive({ keyword: '' })
 async function loadProducts() {
   loading.value = true
   try {
-    products.value = await apiListProducts(search.keyword)
+    const list = await apiListProducts(search.keyword)
+    // 每个商品补一个购买数量（默认 1），供数量选择器使用
+    products.value = list.map((p) => ({ ...p, quantity: 1 }))
   } catch {
     // 错误提示已在 axios 拦截器统一弹出
   } finally {
@@ -32,8 +34,23 @@ async function handleBuy(product) {
     ElMessage.warning('该商品已售罄')
     return
   }
-  await ElMessageBox.confirm(`确定购买「${product.name}」？`, '确认购买', { type: 'info' })
-  ElMessage.success('演示项目：下单流程略，感谢惠顾 🎉')
+  const qty = product.quantity || 1
+  try {
+    await ElMessageBox.confirm(
+      `确定购买「${product.name}」× ${qty} 件（合计 ¥${(Number(product.price) * qty).toFixed(2)}）？`,
+      '确认购买',
+      { type: 'info' },
+    )
+  } catch {
+    return // 用户点了取消
+  }
+  try {
+    const res = await apiBuyProduct(product.id, qty)
+    ElMessage.success(`购买成功，剩余库存 ${res.stock} 件 🎉`)
+    await loadProducts() // 刷新，库存数字立即更新
+  } catch {
+    // 错误提示已在 axios 拦截器统一弹出
+  }
 }
 
 function handleLogout() {
@@ -94,14 +111,22 @@ onMounted(loadProducts)
             {{ p.stock > 0 ? `库存 ${p.stock}` : '已售罄' }}
           </el-tag>
         </div>
-        <el-button
-          type="primary"
-          style="width: 100%; margin-top: 12px"
-          :disabled="p.stock <= 0"
-          @click="handleBuy(p)"
-        >
-          购买
-        </el-button>
+        <div class="buy-row">
+          <el-input-number
+            v-model="p.quantity"
+            :min="1"
+            :max="p.stock"
+            size="small"
+            style="width: 90px"
+          />
+          <el-button
+            type="primary"
+            :disabled="p.stock <= 0"
+            @click="handleBuy(p)"
+          >
+            购买
+          </el-button>
+        </div>
       </el-card>
     </main>
   </div>
@@ -206,5 +231,16 @@ onMounted(loadProducts)
   color: #f56c6c;
   font-size: 20px;
   font-weight: 700;
+}
+
+.buy-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.buy-row .el-button {
+  flex: 1;
 }
 </style>

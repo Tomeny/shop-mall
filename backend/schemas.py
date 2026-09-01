@@ -61,6 +61,11 @@ class ProductOut(ProductIn):
         from_attributes = True
 
 
+class BuyIn(BaseModel):
+    """购买请求：一次可买多件（默认 1 件）。"""
+    quantity: int = Field(default=1, ge=1, le=999)
+
+
 # ---------- 管理员 ----------
 
 class ResetPasswordIn(BaseModel):

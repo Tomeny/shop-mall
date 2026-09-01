@@ -8,6 +8,10 @@ export const apiLogin = (data) => request.post('/auth/login', data)
 export const apiListProducts = (keyword = '') =>
   request.get('/products', { params: { keyword } })
 
+// 购买商品（库存自动减少）
+export const apiBuyProduct = (id, quantity = 1) =>
+  request.post(`/products/${id}/buy`, { quantity })
+
 // ---------- 后台管理 ----------
 export const apiAdminCreateProduct = (data) => request.post('/admin/products', data)
 export const apiAdminUpdateProduct = (id, data) => request.put(`/admin/products/${id}`, data)
