@@ -89,3 +89,13 @@ npm run dev
 - **Depends 子依赖链**：`get_current_user`（解析 JWT → 查库）→ `require_admin`（检查 role），路由只写 `Depends(require_admin)`，FastAPI 自动执行整条链
 - **错误不静默**：前端 axios 拦截器统一弹出 401/403/4xx 提示；401 自动清 token 跳登录页
 - **密码安全**：bcrypt 单向哈希入库，登录接口不区分"用户不存在/密码错误"，管理员只能重置不能查看
+
+## 推送代码到 GitHub
+
+本仓库已配置 SSH 密钥（`~/.ssh/id_ed25519`），远程地址为 SSH 形式，推送无需 token、无需代理：
+
+```bash
+git add -A
+git commit -m "描述这次改动"
+git push
+```
