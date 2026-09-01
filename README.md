@@ -11,7 +11,8 @@ Vue3 + FastAPI 前后端分离的商品城演示项目。
 
 1. **登录/注册**：任意用户可注册账号并登录
 2. **商品浏览**：登录后浏览/搜索上架商品
-3. **后台管理**（仅管理员）：
+3. **购买（自动扣库存）**：选数量下单，库存实时减少；售罄自动禁用购买；并发下单用行锁防超卖
+4. **后台管理**（仅管理员）：
    - 上架 / 编辑 / 下架商品
    - 查看注册用户列表（账号、角色、注册时间）
    - 帮用户重置密码（密码为 bcrypt 单向哈希，**任何人无法查看明文**）
@@ -78,6 +79,7 @@ npm run dev
 | POST | `/api/auth/login` | 公开 | 登录，返回 JWT |
 | GET | `/api/products` | 登录 | 商品列表（?keyword= 搜索） |
 | GET | `/api/products/{id}` | 登录 | 商品详情 |
+| POST | `/api/products/{id}/buy` | 登录 | 购买商品（扣库存） |
 | POST | `/api/admin/products` | 管理员 | 上架商品 |
 | PUT | `/api/admin/products/{id}` | 管理员 | 编辑商品 |
 | DELETE | `/api/admin/products/{id}` | 管理员 | 下架商品 |
@@ -89,6 +91,7 @@ npm run dev
 - **Depends 子依赖链**：`get_current_user`（解析 JWT → 查库）→ `require_admin`（检查 role），路由只写 `Depends(require_admin)`，FastAPI 自动执行整条链
 - **错误不静默**：前端 axios 拦截器统一弹出 401/403/4xx 提示；401 自动清 token 跳登录页
 - **密码安全**：bcrypt 单向哈希入库，登录接口不区分"用户不存在/密码错误"，管理员只能重置不能查看
+- **扣库存防超卖**：购买接口用 `SELECT ... FOR UPDATE` 行锁，多人同时下单时依次扣减，不会把库存扣成负数
 
 ## 推送代码到 GitHub
 
